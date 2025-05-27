@@ -2,10 +2,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
-using System.IO;
-using System.Net.Http;
-using System.Threading.Tasks;
 using OpenAI.Chat;
 
 namespace Microsoft.ManagedIdentity
@@ -61,8 +57,12 @@ namespace Microsoft.ManagedIdentity
             [HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequest req)
         {
             _logger.LogInformation("RocketInfo function processing a request");
-            
-            
+
+            // Get rocket launch data
+            string launchData = await GetRocketLaunchDataAsync();
+
+            string curDate = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
+            _logger.LogInformation($"Current UTC date and time: {curDate}");
 
             try
             {
@@ -77,19 +77,22 @@ namespace Microsoft.ManagedIdentity
 
                 _logger.LogInformation($"Processing question: {question}");
 
-                // Get rocket launch data
-                string launchData = await GetRocketLaunchDataAsync();
 
                 // Construct the prompt with the launch data
-                string prompt = $@"You are a helpful assistant with knowledge about rockets and space. 
-Here is information about upcoming rocket launches:
+                string prompt = $@"You are a helpful assistant with knowledge about rockets and space.
+You have access to up-to-date information about upcoming rocket launches that the user does not directly see.
 
+The current UTC date and time is: {curDate}
+
+Here is the JSON data about the next 5 rocket launches:
 {launchData}
 
-Based on this information, please answer the following question, but do not go off topic:
+Based strictly on this information, answer the following question. Only use details found in the data. 
+If the question cannot be answered using this data, respond that you can only answer questions about the upcoming launches you know about.
+
+Question:
 {question}";
 
-                // Get the chat client and send the enhanced prompt
                 ChatClient client = GetChatClient();
                 ChatCompletion completion = client.CompleteChat(prompt);
 
