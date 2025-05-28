@@ -79,13 +79,18 @@ namespace Microsoft.ManagedIdentity
 
 
                 // Construct the prompt with the launch data
-                string prompt = $@"You are a helpful assistant with knowledge about rockets and space.
+string prompt = $@"You are a helpful assistant with knowledge about rockets and space.
 You have access to up-to-date information about upcoming rocket launches that the user does not directly see.
 
 The current UTC date and time is: {curDate}
 
 Here is the JSON data about the next 5 rocket launches:
 {launchData}
+
+When presenting launch information:
+- If a launch name is ""TBD"" or similar placeholder text, present it as ""Unnamed Mission"" or describe it by its rocket/provider instead of using the placeholder
+- For unnamed launches, you can refer to them as ""[Rocket Name] Mission"" or ""Unnamed [Provider] Launch""
+- Always include all available mission details even for unnamed launches
 
 Based strictly on this information, answer the following question. Only use details found in the data. 
 If the question cannot be answered using this data, respond that you can only answer questions about the upcoming launches you know about.
